@@ -48,15 +48,30 @@ class SerpentBlankaGameAgent(GameAgent):
         self.printer.flush()
 
     def handle_play(self, game_frame):
-        start_button_location = sprite_locator.locate(sprite=self.game.sprites['SPRITE_MENU_BUTTON_START'], game_frame=game_frame)
-        training_button_location = sprite_locator.locate(sprite=self.game.sprites['SPRITE_MENU_BUTTON_TRAINING'], game_frame=game_frame)
+        #start_button_location = sprite_locator.locate(sprite=self.game.sprites['SPRITE_MENU_BUTTON_START'], game_frame=game_frame)
+        #training_button_location = sprite_locator.locate(sprite=self.game.sprites['SPRITE_MENU_BUTTON_TRAINING'], game_frame=game_frame)
 
-        if (start_button_location):
-            self.handle_play_readnews(game_frame)
-        elif (training_button_location):
-            self.handle_play_start_training(game_frame)
-        else:
-            return
+        #button_start_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["MENU_BUTTON_START"])
+        #self.visual_debugger.store_image_data(
+            #button_start_frame,
+            #image_shape = button_start_frame.shape,
+            #bucket = "0"
+        #)
+
+        fightzone_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["FIGHTZONE"])
+        self.visual_debugger.store_image_data(
+            fightzone_frame,
+            image_shape = fightzone_frame.shape,
+            bucket = "1"
+        )
+
+
+        #if (start_button_location):
+            #self.handle_play_readnews(game_frame)
+        #elif (training_button_location):
+            #self.handle_play_start_training(game_frame)
+        #else:
+            #return
 
     def handle_play_readnews(self, game_frame):
         print ("Reading News...")
@@ -121,9 +136,3 @@ class SerpentBlankaGameAgent(GameAgent):
         p2_dizzy_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P2_DIZZY"])
 
         pp.pprint(fightzone_frame)
-
-        self.visual_debugger.store_image_data(
-            fightzone_frame,
-            image_shape = fightzone_frame.shape,
-            bucket = "0"
-        )
