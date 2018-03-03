@@ -1,17 +1,15 @@
 from serpent.game_agent import GameAgent
 from serpent.input_controller import KeyboardKey
-from serpent.machine_learning.context_classification.context_classifiers import CNNInceptionV3ContextClassifier
 from serpent.sprite_locator import SpriteLocator
-import serpent.ocr as ocr
+sprite_locator = SpriteLocator()
 import serpent.cv
-import skimage
-import numpy as np
+import offshoot
+
+import time
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
 
 from .helpers.terminal_printer import TerminalPrinter
-
-import itertools
-import collections
-import offshoot
 
 class SerpentBlankaGameAgent(GameAgent):
 
@@ -23,6 +21,7 @@ class SerpentBlankaGameAgent(GameAgent):
         self.frame_handler_setups["PLAY"] = self.setup_play
 
         self.printer = TerminalPrinter()
+        self.sprite_locator = SpriteLocator()
 
     def setup_play(self):
         move_inputs = {
@@ -45,44 +44,57 @@ class SerpentBlankaGameAgent(GameAgent):
             "H-KICK": [KeyboardKey.KEY_M],
         }
 
-
-        plugin_path = offshoot.config["file_paths"]["plugins"]
-
-        context_classifier_path = f"{plugin_path}/SerpentBlankaGameAgentPlugin/files/ml_models/context_classifier.model"
-
-        from serpent.machine_learning.context_classification.context_classifiers.cnn_inception_v3_context_classifier import CNNInceptionV3ContextClassifier
-        context_classifier = CNNInceptionV3ContextClassifier(input_shape=(640, 480, 3))
-
-        context_classifier.prepare_generators()
-        context_classifier.load_classifier(context_classifier_path)
-
-        self.machine_learning_models["context_classifier"] = context_classifier
-
         self.printer.add("Game started")
         self.printer.flush()
 
     def handle_play(self, game_frame):
-        context = self.machine_learning_models["context_classifier"].predict(game_frame.frame)      
+        start_button_location = sprite_locator.locate(sprite=self.game.sprites['SPRITE_MENU_BUTTON_START'], game_frame=game_frame)
+        training_button_location = sprite_locator.locate(sprite=self.game.sprites['SPRITE_MENU_BUTTON_TRAINING'], game_frame=game_frame)
 
-        if context is None:
-            context = "Unknown"
+        if (start_button_location):
+            self.handle_play_readnews(game_frame)
+        elif (training_button_location):
+            self.handle_play_start_training(game_frame)
+        else:
+            return
 
-        if context.startswith("main_"):
-            self.handle_play_main_menu(game_frame)
+    def handle_play_readnews(self, game_frame):
+        print ("Reading News...")
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_B)
+        time.sleep(1)
 
-        if context.startswith("level_"):
-            self.handle_play_level_select(game_frame)
-
-        if context.startswith("player_"):
-            self.handle_play_player_select(game_frame)
-
-        if context.startswith("fight_"):
-            self.handle_play_fight_training(game_frame)
-
-    def handle_play_main_menu(self, game_frame):
+    def handle_play_start_training(self, game_frame):
         print ("Starting Training Mode")
-        for name, sprite in self.game.sprites.items():
-            print(name)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_S)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_D)
+        time.sleep(0.1)
+        self.input_controller.tap_key(KeyboardKey.KEY_B)
+        time.sleep(1)
 
     def handle_play_level_select(self, game_frame):
         print ("Choosing Level")
@@ -95,16 +107,23 @@ class SerpentBlankaGameAgent(GameAgent):
     def handle_play_fight_training(self, game_frame):
         print("Fight Training in Progress")
 
-        time_area_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["time"])
+        fightzone_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["FIGHTZONE"])
+        timer_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["TIMER"])
+
+        p1_health_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P1_HEALTH"])
+        p1_trigger_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P1_TRIGGER"])
+        p1_ca_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P1_CA"])
+        p1_dizzy_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P1_DIZZY"])
+
+        p2_health_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P2_HEALTH"])
+        p2_trigger_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P2_TRIGGER"])
+        p2_ca_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P2_CA"])
+        p2_dizzy_frame = serpent.cv.extract_region_from_image(game_frame.frame, self.game.screen_regions["P2_DIZZY"])
+
+        pp.pprint(fightzone_frame)
 
         self.visual_debugger.store_image_data(
-            game_frame.frame,
-            image_shape = game_frame.frame.shape,
+            fightzone_frame,
+            image_shape = fightzone_frame.shape,
             bucket = "0"
-        )
-
-        self.visual_debugger.store_image_data(
-            time_area_frame,
-            image_shape = time_area_frame.shape,
-            bucket = "1"
         )
